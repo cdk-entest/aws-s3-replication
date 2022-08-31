@@ -4,7 +4,7 @@
 - Batch operation introuction 
 
 
-## 1. Replication for New Created Buckets 
+## 1. For New Buckets  
 ```ts
 const dest = new cdk.aws_s3.Bucket(
   this,
@@ -69,7 +69,7 @@ const source = new cdk.aws_s3.CfnBucket(
 ```
 
 
-## 2. Replication for Existing Objects 
+## 2. For Existing Objects 
 Need to create a batch job from aws console. Note to 
 - Provide the correct roles for replication rule and batch job 
 - It is good to choose create roles option so the role is automatically created 
