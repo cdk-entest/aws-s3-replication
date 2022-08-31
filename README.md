@@ -1,14 +1,75 @@
-# Welcome to your CDK TypeScript project
+## Introduction 
+- Replication for new created buckets 
+- Replication for existing objects 
+- Batch operation introuction 
 
-This is a blank project for CDK development with TypeScript.
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
+## New Created Buckets 
+```ts
+const dest = new cdk.aws_s3.Bucket(
+  this,
+  "DestBucket",
+  {
+    bucketName: `dest-bucket-${this.account}`,
+    versioned: true,
+    removalPolicy: RemovalPolicy.DESTROY
+  }
+)
+```
 
-## Useful commands
+role for replication rule 
+```tsx
+const role = new cdk.aws_iam.Role(
+  this,
+  "RoleForReplicationTask",
+  {
+    roleName: "RoleForReplicationTask",
+    assumedBy: new cdk.aws_iam.ServicePrincipal("s3.amazonaws.com"),
+    inlinePolicies: {
+      "AllowCopyData": new cdk.aws_iam.PolicyDocument({
+        statements: [
+          // my lazy role - check docs for least privildge
+          new cdk.aws_iam.PolicyStatement({
+            effect: Effect.ALLOW,
+            resources: ["*"],
+            actions: ["s3:*"]
+          })
+        ]
+      })
+    }
+  }
+)
+```
 
-* `npm run build`   compile typescript to js
-* `npm run watch`   watch for changes and compile
-* `npm run test`    perform the jest unit tests
-* `cdk deploy`      deploy this stack to your default AWS account/region
-* `cdk diff`        compare deployed stack with current state
-* `cdk synth`       emits the synthesized CloudFormation template
+source bucket 
+```tsx
+const source = new cdk.aws_s3.CfnBucket(
+  this,
+  "SourceBucket",
+  {
+    bucketName: `source-bucket-${this.account}`,
+    versioningConfiguration: {
+      status: "Enabled",
+    },
+    // replication configuration and rules 
+    replicationConfiguration: {
+      role: role.roleArn,
+      rules: [
+        {
+          status: "Enabled",
+          // prefix: "images/",
+          destination: {
+            bucket: dest.bucketArn
+          }
+        }
+      ]
+    }
+  }
+)
+```
+
+
+## Existing Objects 
+Need to create a batch job from aws console. Note to 
+- Provide the correct roles for replication rule and batch job 
+- It is good to choose create roles option so the role is automatically created 
